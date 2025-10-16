@@ -1,0 +1,108 @@
+project:
+  name: northwind-data-platform
+  region: eu-north-1
+  environment: dev
+  tags:
+    Owner: data-platform-team
+    CostCenter: analytics
+
+network:
+  vpc:
+    cidr: 10.10.0.0/16
+    az_count: 2
+  subnets:
+    public:
+      cidr_blocks:
+        - 10.10.1.0/24
+        - 10.10.2.0/24
+    private:
+      cidr_blocks:
+        - 10.10.11.0/24
+        - 10.10.12.0/24
+
+compute:
+  name: northwind-analytics
+  instance_type: t3.medium
+  desired_capacity: 2
+  min_size: 1
+  max_size: 4
+  cpu_target_utilization: 55
+  iam_instance_profile: northwind-analytics-ec2-profile
+  associate_public_ip: false
+  user_data_path: scripts/ec2_bootstrap.sh
+  ami:
+    owners:
+      - amazon
+    name_filter: amzn2-ami-hvm-*-x86_64-gp2
+  security_group:
+    name: northwind-analytics-ec2-sg
+    description: Allow HTTPS ingress and outbound access for analytics services.
+    ingress:
+      - description: Allow HTTPS from corporate network
+        protocol: tcp
+        from_port: 443
+        to_port: 443
+        cidr_blocks:
+          - 0.0.0.0/0
+    egress:
+      - description: Allow outbound access
+        protocol: -1
+        from_port: 0
+        to_port: 0
+        cidr_blocks:
+          - 0.0.0.0/0
+
+rds:
+  identifier: northwind-analytics-db
+  db_name: analytics
+  engine: postgres
+  engine_version: "15.3"
+  instance_class: db.m6g.large
+  allocated_storage: 100
+  max_allocated_storage: 500
+  multi_az: true
+  backup_retention_days: 7
+  backup_window: "03:00-04:00"
+  maintenance_window: "sun:05:00-sun:06:00"
+  deletion_protection: true
+  iam_authentication: true
+  storage_encrypted: true
+  parameter_group_name: null
+  master_secret_name: rds/northwind-analytics
+  master_username_key: username
+  master_password_key: password
+  security_group:
+    name: northwind-analytics-rds-sg
+    description: Allow PostgreSQL from VPC private subnets
+    ingress:
+      - description: Allow PostgreSQL from private subnets
+        protocol: tcp
+        from_port: 5432
+        to_port: 5432
+        cidr_blocks:
+          - 10.10.0.0/16
+
+s3:
+  raw_bucket: northwind-data-raw-eu-north-1-dev
+  curated_bucket: northwind-data-curated-eu-north-1-dev
+  encryption:
+    type: aws:kms
+    kms_key_arn: null
+  lifecycle_rules:
+    - id: raw-transition
+      status: Enabled
+      prefix: raw/
+      transitions:
+        - days: 30
+          storage_class: STANDARD_IA
+        - days: 90
+          storage_class: GLACIER
+
+api:
+  vehicle_market_value:
+    endpoint: https://vehicle-market-value.p.rapidapi.com/vmv
+    secret_name: rapidapi/vehicle-market-value
+    retry:
+      max_attempts: 5
+      backoff_seconds: 2
+

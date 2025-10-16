@@ -1,0 +1,32 @@
+run:
+  environment: dev
+  region: eu-north-1
+  log_level: INFO
+
+sources:
+  vehicle_market_value:
+    endpoint: https://vehicle-market-value.p.rapidapi.com/vmv
+    secret_name: rapidapi/vehicle-market-value
+    retries:
+      max_attempts: 5
+      backoff_seconds: 2
+    default_state: AL
+    plates:
+      - S8TAN
+      - TEST123
+
+storage:
+  raw_bucket: northwind-data-raw-eu-north-1-dev
+  curated_bucket: northwind-data-curated-eu-north-1-dev
+  prefix:
+    raw: vehicle_market/raw
+    curated: vehicle_market/curated
+
+rds:
+  cluster_endpoint: northwind-analytics.cluster-abcdefghijkl.eu-north-1.rds.amazonaws.com
+  database: analytics
+  table: vehicle_market_valuation
+  secret_name: rds/northwind-analytics
+  username_key: username
+  password_key: password
+
