@@ -1,0 +1,32 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam node {
+  BackgroundColor White
+  BorderColor #2C3E50
+  FontColor #2C3E50
+}
+
+title Cloud Data Architecture – Data Flow
+
+actor "External Sources" as Sources
+cloud "RapidAPI Vehicle Value" as API
+node "AWS S3 Data Lake" as S3 {
+  folder "Raw Zone" as Raw
+  folder "Curated Zone" as Curated
+}
+node "AWS Glue / PySpark" as Glue
+node "AWS RDS (Analytics)" as RDS
+node "Amazon EC2 Compute" as EC2
+rectangle "Observability & Governance" as Obs
+
+Sources --> Raw : Batch/Streaming Files
+API --> Raw : REST responses
+Raw --> Glue : Triggered ETL Jobs
+Glue --> Curated : Clean/Validated Data
+Glue --> RDS : Aggregated Tables
+Curated --> EC2 : Analytics APIs / BI
+RDS --> EC2 : Reporting Queries
+Glue --> Obs : Metrics & Logs
+S3 --> Obs : Object Events
+RDS --> Obs : Performance Insights
+@enduml

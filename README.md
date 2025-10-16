@@ -14,8 +14,8 @@ Northwind Trading is modernizing its analytics stack to support near-real-time d
 - **Data Governance & Security**: enforce compliance, IAM policies, data classifications, retention.
 - **DevOps/SRE**: manage infrastructure automation, monitoring, incident response.
 
-## Project Architect
-- **Edward Junior Effah-Nyarko** – AWS Data Architect (UK). Leads platform strategy, infrastructure automation, and cross-team collaboration for this reference implementation. Oversees VPC/network design, data lake governance, ETL standards, and stakeholder alignment.
+## Architecture Overview Diagram
+The end-to-end data flow is captured in `docs/architecture/data_flow.puml`. Render with PlantUML or an online viewer to visualize how sources feed the S3 data lake, transformations via Glue/PySpark, and serving layers on RDS/EC2 with observability hooks.
 
 ## Functional Requirements
 - Ingest batch and incremental datasets into `aws_s3` data lake landing zones.
